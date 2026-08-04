@@ -1,0 +1,39 @@
+import { GithubRepo } from "@/app/lib/definitions";
+
+export default async function RepoDetailPage({
+  params,
+}: {
+  params: Promise<{ owner: string; repo: string }>;
+}) {
+  const { owner, repo } = await params;
+
+  const res = await fetch(
+    `http://localhost:3000/api/github/repo?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`
+  );
+  const repoData: GithubRepo = await res.json();
+
+  return (
+    <main className="mx-auto max-w-5xl px-6 py-12">
+      <p className="text-sm text-zinc-500">{owner}</p>
+      <h1 className="text-3xl font-bold text-zinc-900">{repoData.name}</h1>
+      <p className="mt-3 max-w-xl text-zinc-600">
+        {repoData.description ?? "No description"}
+      </p>
+
+      <div className="mt-6 flex gap-6 text-sm text-zinc-500">
+        <span>⭐ {repoData.stargazers_count} stars</span>
+        <span>🍴 {repoData.forks_count} forks</span>
+        {repoData.language && <span>{repoData.language}</span>}
+      </div>
+
+      <a
+        href={repoData.html_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-8 inline-block rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white"
+      >
+        View on GitHub
+      </a>
+    </main>
+  );
+}
