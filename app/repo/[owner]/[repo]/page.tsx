@@ -1,4 +1,5 @@
 import { GithubRepo } from "@/app/lib/definitions";
+import ErrorMessage from "@/app/ui/error-message";
 
 export default async function RepoDetailPage({
   params,
@@ -8,8 +9,18 @@ export default async function RepoDetailPage({
   const { owner, repo } = await params;
 
   const res = await fetch(
-    `http://localhost:3000/api/github/repo?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`
+    `http://localhost:3000/api/github/repo?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`,
   );
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    return (
+      <main className="mx-auto max-w-5xl px-6 py-12">
+      <ErrorMessage message={errorData.error ?? "Something went wrong."} />
+    </main>
+    );
+  }
+
   const repoData: GithubRepo = await res.json();
 
   return (

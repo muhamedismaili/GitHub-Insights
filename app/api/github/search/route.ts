@@ -12,9 +12,14 @@ export async function GET(request: NextRequest) {
   }
 
   const response = await fetch(
-    `https://api.github.com/search/users?q=${encodeURIComponent(query)}`,
-    { headers: { Accept: "application/vnd.github+json" } }
-  );
+  `https://api.github.com/search/users?q=${encodeURIComponent(query)}`,
+  {
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+    },
+  }
+);
 
   if (!response.ok) {
     return NextResponse.json(

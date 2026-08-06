@@ -1,5 +1,7 @@
 import SearchBox from "@/app/ui/search-box";
 import { GithubUserSearchResult } from "@/app/lib/definitions";
+import Link from "next/link";
+import ErrorMessage from "@/app/ui/error-message";
 
 export default async function SearchPage({
   searchParams,
@@ -9,12 +11,18 @@ export default async function SearchPage({
   const { q } = await searchParams;
 
   let results: GithubUserSearchResult | null = null;
+  let errorMessage: string | null = null;
 
   if (q) {
     const res = await fetch(
-      `http://localhost:3000/api/github/search?q=${encodeURIComponent(q)}`
+      `http://localhost:3000/api/github/search?q=${encodeURIComponent(q)}`,
     );
-    results = await res.json();
+    if (res.ok) {
+      results = await res.json();
+    } else {
+      const errorData = await res.json();
+      errorMessage = errorData.error ?? "Something went wrong.";
+    }
   }
 
   return (
@@ -26,9 +34,10 @@ export default async function SearchPage({
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         {results?.items.map((user) => (
-          <div
+          <Link
             key={user.id}
-            className="flex items-center gap-3 rounded-lg border border-zinc-200 p-4"
+            href={`/user/${user.login}`}
+            className="flex items-center gap-3 rounded-lg border border-zinc-200 p-4 transition-colors hover:border-zinc-400"
           >
             <img
               src={user.avatar_url}
@@ -36,10 +45,10 @@ export default async function SearchPage({
               className="h-10 w-10 rounded-full"
             />
             <span className="font-medium text-zinc-900">{user.login}</span>
-          </div>
+          </Link>
         ))}
       </div>
-
+      {errorMessage && <ErrorMessage message={errorMessage} />}
       {q && results?.items.length === 0 && (
         <p className="mt-8 text-zinc-500">No results for &quot;{q}&quot;.</p>
       )}
