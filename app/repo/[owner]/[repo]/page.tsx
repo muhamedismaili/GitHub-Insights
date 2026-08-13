@@ -1,5 +1,7 @@
 import { GithubRepo } from "@/app/lib/definitions";
 import ErrorMessage from "@/app/ui/error-message";
+import BackButton from "@/app/ui/back-button";
+import WatchlistButton from "@/app/ui/watchlist-button";
 
 export default async function RepoDetailPage({
   params,
@@ -9,22 +11,33 @@ export default async function RepoDetailPage({
   const { owner, repo } = await params;
 
   const res = await fetch(
-    `http://localhost:3000/api/github/repo?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`,
+    `http://localhost:3000/api/github/repo?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`
   );
 
   if (!res.ok) {
     const errorData = await res.json();
     return (
       <main className="mx-auto max-w-5xl px-6 py-12">
-      <ErrorMessage message={errorData.error ?? "Something went wrong."} />
-    </main>
+        <BackButton />
+        <ErrorMessage message={errorData.error ?? "Something went wrong."} />
+      </main>
     );
   }
 
   const repoData: GithubRepo = await res.json();
 
+  const watchlistRes = await fetch("http://localhost:3000/api/watchlist", {
+    cache: "no-store",
+  });
+  const watchlist = watchlistRes.ok ? await watchlistRes.json() : [];
+  const existingItem = watchlist.find(
+    (item: { id: string; owner: string; repo: string }) =>
+      item.owner === owner && item.repo === repoData.name
+  );
+
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
+      <BackButton />
       <p className="text-sm text-zinc-500">{owner}</p>
       <h1 className="text-3xl font-bold text-zinc-900">{repoData.name}</h1>
       <p className="mt-3 max-w-xl text-zinc-600">
@@ -45,6 +58,11 @@ export default async function RepoDetailPage({
       >
         View on GitHub
       </a>
+      <WatchlistButton
+        owner={owner}
+        repo={repoData.name}
+        initialItemId={existingItem?.id ?? null}
+      />
     </main>
   );
 }

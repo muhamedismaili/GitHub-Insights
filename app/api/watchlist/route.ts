@@ -12,13 +12,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const existing = await prisma.watchlistItem.findFirst({
+    where: { owner, repo },
+  });
+
+  if (existing) {
+    return NextResponse.json(
+      { error: "This repo is already in your watchlist." },
+      { status: 409 }
+    );
+  }
+
   const watchlistItem = await prisma.watchlistItem.create({
     data: { owner, repo },
   });
 
   return NextResponse.json(watchlistItem, { status: 201 });
 }
-
 export async function GET() {
   const watchlist = await prisma.watchlistItem.findMany({
     include: { notes: true },

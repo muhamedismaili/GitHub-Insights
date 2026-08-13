@@ -19,6 +19,6 @@ model Note {
   id              String        @id @default(cuid())
   content         String
   createdAt       DateTime      @default(now())
-  watchlistItem   WatchlistItem @relation(fields: [watchlistItemId], references: [id])
+  watchlistItem   WatchlistItem @relation(fields: [watchlistItemId], references: [id], onDelete: Cascade)
   watchlistItemId String
 }

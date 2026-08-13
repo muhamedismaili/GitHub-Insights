@@ -1,6 +1,7 @@
 import { GithubRepo } from "@/app/lib/definitions";
 import Link from "next/link";
 import ErrorMessage from "@/app/ui/error-message";
+import BackButton from "@/app/ui/back-button";
 
 export default async function UserReposPage({
   params,
@@ -25,9 +26,15 @@ export default async function UserReposPage({
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
+      <BackButton />
       <h1 className="text-2xl font-bold text-zinc-900">
         {username}&apos;s Repositories
       </h1>
+      {repos.length === 0 && (
+        <p className="mt-8 text-zinc-500">
+          {`${username} doesn't have any repositories.`}
+        </p>
+      )}
       {errorMessage && <ErrorMessage message={errorMessage} />}
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {repos.map((repo) => (
