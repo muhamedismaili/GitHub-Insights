@@ -1,7 +1,8 @@
 import Link from "next/link";
 import ErrorMessage from "@/app/ui/error-message";
 import AddNoteForm from "@/app/ui/add-note-form";
-import RemoveItemButton from "../ui/remove-item-button";
+import RemoveItemButton from "@/app/ui/remove-item-button";
+import RemoveNoteButton from "@/app/ui/remove-note-button";
 
 type WatchlistNote = {
   id: string;
@@ -17,16 +18,27 @@ type WatchlistItem = {
   notes: WatchlistNote[];
 };
 
-export default async function WatchlistPage() {
-  const res = await fetch("http://localhost:3000/api/watchlist", {
-    cache: "no-store",
-  });
+export default async function WatchlistPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page } = await searchParams;
+  const currentPage = Number(page) || 1;
+
+  const res = await fetch(
+    `http://localhost:3000/api/watchlist?page=${currentPage}`,
+    { cache: "no-store" }
+  );
 
   let watchlist: WatchlistItem[] = [];
+  let hasNextPage = false;
   let errorMessage: string | null = null;
 
   if (res.ok) {
-    watchlist = await res.json();
+    const data = await res.json();
+    watchlist = data.watchlist;
+    hasNextPage = data.hasNextPage;
   } else {
     const errorData = await res.json();
     errorMessage = errorData.error ?? "Something went wrong.";
@@ -38,7 +50,7 @@ export default async function WatchlistPage() {
 
       {errorMessage && <ErrorMessage message={errorMessage} />}
 
-      {!errorMessage && watchlist.length === 0 && (
+      {!errorMessage && watchlist.length === 0 && currentPage === 1 && (
         <p className="mt-8 text-zinc-500">
           Nothing in your watchlist yet — browse a repo and add it.
         </p>
@@ -46,8 +58,11 @@ export default async function WatchlistPage() {
 
       <div className="mt-8 flex flex-col gap-4">
         {watchlist.map((item) => (
-          <div key={item.id} className="relative rounded-lg border border-zinc-200 p-4">
-            <RemoveItemButton itemId={item.id}/>
+          <div
+            key={item.id}
+            className="relative rounded-lg border border-zinc-200 p-4"
+          >
+            <RemoveItemButton itemId={item.id} />
             <Link
               href={`/repo/${item.owner}/${item.repo}`}
               className="font-semibold text-zinc-900 hover:underline"
@@ -57,20 +72,44 @@ export default async function WatchlistPage() {
             <p className="mt-1 text-xs text-zinc-400">
               Added {new Date(item.addedAt).toLocaleDateString()}
             </p>
-
             {item.notes.length > 0 && (
               <ul className="mt-3 flex flex-col gap-1">
                 {item.notes.map((note) => (
-                  <li key={note.id} className="text-sm text-zinc-600">
-                    {note.content}
+                  <li
+                    key={note.id}
+                    className="flex items-start justify-between gap-2 text-sm text-zinc-600"
+                  >
+                    <span className="min-w-0 break-words">{note.content}</span>
+                    <RemoveNoteButton itemId={item.id} noteId={note.id} />
                   </li>
                 ))}
               </ul>
             )}
-
             <AddNoteForm itemId={item.id} />
           </div>
         ))}
+      </div>
+
+      <div className="mt-8 flex items-center justify-between">
+        {currentPage > 1 ? (
+          <Link
+            href={`/watchlist?page=${currentPage - 1}`}
+            className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+          >
+            ← Previous
+          </Link>
+        ) : (
+          <span />
+        )}
+
+        {hasNextPage && (
+          <Link
+            href={`/watchlist?page=${currentPage + 1}`}
+            className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+          >
+            Next →
+          </Link>
+        )}
       </div>
     </main>
   );

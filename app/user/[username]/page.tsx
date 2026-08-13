@@ -1,24 +1,31 @@
-import { GithubRepo } from "@/app/lib/definitions";
 import Link from "next/link";
+import { GithubRepo } from "@/app/lib/definitions";
 import ErrorMessage from "@/app/ui/error-message";
 import BackButton from "@/app/ui/back-button";
 
 export default async function UserReposPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { username } = await params;
+  const { page } = await searchParams;
+  const currentPage = Number(page) || 1;
 
   const res = await fetch(
-    `http://localhost:3000/api/github/repos?username=${encodeURIComponent(username)}`,
+    `http://localhost:3000/api/github/repos?username=${encodeURIComponent(username)}&page=${currentPage}`
   );
 
   let repos: GithubRepo[] = [];
+  let hasNextPage = false;
   let errorMessage: string | null = null;
 
   if (res.ok) {
-    repos = await res.json();
+    const data = await res.json();
+    repos = data.repos;
+    hasNextPage = data.hasNextPage;
   } else {
     const errorData = await res.json();
     errorMessage = errorData.error ?? "Something went wrong.";
@@ -30,12 +37,15 @@ export default async function UserReposPage({
       <h1 className="text-2xl font-bold text-zinc-900">
         {username}&apos;s Repositories
       </h1>
-      {repos.length === 0 && (
+
+      {errorMessage && <ErrorMessage message={errorMessage} />}
+
+      {!errorMessage && repos.length === 0 && (
         <p className="mt-8 text-zinc-500">
           {`${username} doesn't have any repositories.`}
         </p>
       )}
-      {errorMessage && <ErrorMessage message={errorMessage} />}
+
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {repos.map((repo) => (
           <Link
@@ -54,6 +64,28 @@ export default async function UserReposPage({
             </div>
           </Link>
         ))}
+      </div>
+
+      <div className="mt-8 flex items-center justify-between">
+        {currentPage > 1 ? (
+          <Link
+            href={`/user/${username}?page=${currentPage - 1}`}
+            className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+          >
+            ← Previous
+          </Link>
+        ) : (
+          <span />
+        )}
+
+        {hasNextPage && (
+          <Link
+            href={`/user/${username}?page=${currentPage + 1}`}
+            className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100"
+          >
+            Next →
+          </Link>
+        )}
       </div>
     </main>
   );

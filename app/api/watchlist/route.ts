@@ -29,11 +29,21 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json(watchlistItem, { status: 201 });
 }
-export async function GET() {
-  const watchlist = await prisma.watchlistItem.findMany({
-    include: { notes: true },
-    orderBy: { addedAt: "desc" },
-  });
+export async function GET(request: NextRequest) {
+  const page = Number(request.nextUrl.searchParams.get("page")) || 1;
+  const perPage = 8;
 
-  return NextResponse.json(watchlist);
+  const [watchlist, totalCount] = await Promise.all([
+    prisma.watchlistItem.findMany({
+      include: { notes: true },
+      orderBy: { addedAt: "desc" },
+      skip: (page - 1) * perPage,
+      take: perPage,
+    }),
+    prisma.watchlistItem.count(),
+  ]);
+
+  const hasNextPage = page * perPage < totalCount;
+
+  return NextResponse.json({ watchlist, hasNextPage });
 }
