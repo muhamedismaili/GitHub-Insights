@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import LoadingSpinner from "./loading-spinner";
 
 export default function WatchlistButton({
   owner,
@@ -40,7 +41,7 @@ export default function WatchlistButton({
     if (!itemId) return;
 
     const confirmed = window.confirm(
-      "Remove this repo from your watchlist? This will also delete any notes on it."
+      "Remove this repo from your watchlist? This will also delete any notes on it.",
     );
     if (!confirmed) return;
 
@@ -67,7 +68,14 @@ export default function WatchlistButton({
         disabled={status === "loading"}
         className="mt-8 ml-3 inline-block rounded-full border border-red-300 px-5 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
       >
-        {status === "loading" ? "Removing..." : "✕ Remove from watchlist"}
+        {status === "loading" ? (
+          <span className="flex items-center gap-1.5">
+            <LoadingSpinner className="h-3.5 w-3.5" />
+            Removing...
+          </span>
+        ) : (
+          "✕ Remove from watchlist"
+        )}
       </button>
     );
   }
@@ -78,7 +86,14 @@ export default function WatchlistButton({
       disabled={status === "loading"}
       className="mt-8 ml-3 inline-block rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 disabled:opacity-50"
     >
-      {status === "loading" ? "Adding..." : "+ Add to watchlist"}
+      {status === "loading" ? (
+        <span className="flex items-center gap-1.5">
+          <LoadingSpinner className="h-3.5 w-3.5" />
+          Adding...
+        </span>
+      ) : (
+        "+ Add to watchlist"
+      )}
     </button>
   );
 }

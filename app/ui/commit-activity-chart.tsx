@@ -22,7 +22,7 @@ export default function CommitActivityChart({
   useEffect(() => {
     async function load() {
       const res = await fetch(
-        `/api/github/commit-activity?owner=${owner}&repo=${repo}`
+        `/api/github/commit-activity?owner=${owner}&repo=${repo}`,
       );
 
       if (res.status === 202) {
@@ -48,7 +48,9 @@ export default function CommitActivityChart({
 
   if (pending) {
     return (
-      <p className="text-xs text-zinc-500">Computing stats, refresh shortly...</p>
+      <p className="text-xs text-zinc-500">
+        Computing stats, refresh shortly...
+      </p>
     );
   }
 
@@ -68,7 +70,13 @@ export default function CommitActivityChart({
     <div className="h-32">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData}>
-          <XAxis dataKey="week" tick={{ fontSize: 10 }} />
+          <XAxis
+            dataKey="week"
+            tick={{ fontSize: 9 }}
+            interval={0}
+            angle={0}
+            height={40}
+          />
           <YAxis hide />
           <Bar dataKey="commits" fill="#18181b" radius={[2, 2, 0, 0]} />
         </BarChart>

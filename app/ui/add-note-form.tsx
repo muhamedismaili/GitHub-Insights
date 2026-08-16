@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import LoadingSpinner from "./loading-spinner";
 
 export default function AddNoteForm({ itemId }: { itemId: string }) {
   const [content, setContent] = useState("");
@@ -47,7 +48,7 @@ export default function AddNoteForm({ itemId }: { itemId: string }) {
           disabled={submitting}
           className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
         >
-          Add
+          {submitting ? <LoadingSpinner className="h-3.5 w-3.5" /> : "Add"}
         </button>
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}

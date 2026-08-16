@@ -2,6 +2,8 @@ import Link from "next/link";
 import { GithubRepo } from "@/app/lib/definitions";
 import ErrorMessage from "@/app/ui/error-message";
 import BackButton from "@/app/ui/back-button";
+import EmptyState from "@/app/ui/empty-state";
+import RepoListItem from "@/app/ui/repo-list-item";
 
 export default async function UserReposPage({
   params,
@@ -15,7 +17,7 @@ export default async function UserReposPage({
   const currentPage = Number(page) || 1;
 
   const res = await fetch(
-    `http://localhost:3000/api/github/repos?username=${encodeURIComponent(username)}&page=${currentPage}`
+    `http://localhost:3000/api/github/repos?username=${encodeURIComponent(username)}&page=${currentPage}`,
   );
 
   let repos: GithubRepo[] = [];
@@ -41,28 +43,20 @@ export default async function UserReposPage({
       {errorMessage && <ErrorMessage message={errorMessage} />}
 
       {!errorMessage && repos.length === 0 && (
-        <p className="mt-8 text-zinc-500">
-          {`${username} doesn't have any repositories.`}
-        </p>
+        <EmptyState message={`${username} doesn't have any repositories.`} />
       )}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {repos.map((repo) => (
-          <Link
+          <RepoListItem
             key={repo.id}
             href={`/repo/${repo.full_name}`}
-            className="rounded-lg border border-zinc-200 p-4 transition-colors hover:border-zinc-400"
-          >
-            <h2 className="font-semibold text-zinc-900">{repo.name}</h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              {repo.description ?? "No description"}
-            </p>
-            <div className="mt-3 flex gap-4 text-xs text-zinc-500">
-              <span>⭐ {repo.stargazers_count}</span>
-              <span>🍴 {repo.forks_count}</span>
-              {repo.language && <span>{repo.language}</span>}
-            </div>
-          </Link>
+            name={repo.name}
+            description={repo.description}
+            stars={repo.stargazers_count}
+            forks={repo.forks_count}
+            language={repo.language}
+          />
         ))}
       </div>
 

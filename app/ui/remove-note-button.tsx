@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import LoadingSpinner from "./loading-spinner";
 
 export default function RemoveNoteButton({
   itemId,
@@ -36,6 +37,8 @@ export default function RemoveNoteButton({
       disabled={loading}
       aria-label="Delete note"
       className="text-zinc-400 transition-colors px-4 hover:text-red-600 disabled:opacity-50"
-    >✕</button>
+    >
+      {loading ? <LoadingSpinner className="h-3 w-3" /> : "✕"}
+    </button>
   );
 }

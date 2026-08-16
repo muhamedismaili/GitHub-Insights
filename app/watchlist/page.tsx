@@ -3,6 +3,8 @@ import ErrorMessage from "@/app/ui/error-message";
 import AddNoteForm from "@/app/ui/add-note-form";
 import RemoveItemButton from "@/app/ui/remove-item-button";
 import RemoveNoteButton from "@/app/ui/remove-note-button";
+import Card from "../ui/card";
+import EmptyState from "../ui/empty-state";
 
 type WatchlistNote = {
   id: string;
@@ -51,16 +53,14 @@ export default async function WatchlistPage({
       {errorMessage && <ErrorMessage message={errorMessage} />}
 
       {!errorMessage && watchlist.length === 0 && currentPage === 1 && (
-        <p className="mt-8 text-zinc-500">
-          Nothing in your watchlist yet — browse a repo and add it.
-        </p>
+        <EmptyState message="Nothing in your watchlist yet — browse a repo and add it." />
       )}
 
       <div className="mt-8 flex flex-col gap-4">
         {watchlist.map((item) => (
-          <div
+          <Card
             key={item.id}
-            className="relative rounded-lg border border-zinc-200 p-4"
+            className="relative"
           >
             <RemoveItemButton itemId={item.id} />
             <Link
@@ -86,7 +86,7 @@ export default async function WatchlistPage({
               </ul>
             )}
             <AddNoteForm itemId={item.id} />
-          </div>
+          </Card>
         ))}
       </div>
 

@@ -1,6 +1,8 @@
 import ErrorMessage from "@/app/ui/error-message";
 import LanguageChart from "@/app/ui/language-chart";
 import CommitActivityChart from "@/app/ui/commit-activity-chart";
+import Card from "../ui/card";
+import EmptyState from "../ui/empty-state";
 
 type DashboardData = {
   totalWatched: number;
@@ -32,21 +34,19 @@ export default async function DashboardPage() {
       {errorMessage && <ErrorMessage message={errorMessage} />}
 
       {data && data.totalWatched === 0 && (
-        <p className="mt-8 text-zinc-500">
-          Nothing in your watchlist yet — add some repos to see stats here.
-        </p>
+        <EmptyState message="Nothing in your watchlist yet — add some repos to see stats here."/>
       )}
 
       {data && data.totalWatched > 0 && (
         <>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-lg border border-zinc-200 p-4">
+            <Card>
               <p className="text-xs text-zinc-500">Total watched</p>
               <p className="mt-1 text-2xl font-bold text-zinc-900">
                 {data.totalWatched}
               </p>
-            </div>
-            <div className="rounded-lg border border-zinc-200 p-4">
+            </Card>
+            <Card>
               <p className="text-xs text-zinc-500">Most starred</p>
               <p className="mt-1 text-lg font-semibold text-zinc-900">
                 {data.mostStarred
@@ -58,15 +58,15 @@ export default async function DashboardPage() {
                   ⭐ {data.mostStarred.stars}
                 </p>
               )}
-            </div>
-            <div className="rounded-lg border border-zinc-200 p-4">
+            </Card>
+            <Card>
               <p className="text-xs text-zinc-500">Most recently added</p>
               <p className="mt-1 text-lg font-semibold text-zinc-900">
                 {data.mostRecent
                   ? `${data.mostRecent.owner}/${data.mostRecent.repo}`
                   : "—"}
               </p>
-            </div>
+            </Card>
           </div>
 
           <div className="mt-8">
@@ -81,9 +81,8 @@ export default async function DashboardPage() {
             </h2>
             <div className="mt-4 flex flex-col gap-4">
               {data.watchlistItems.map((item) => (
-                <div
+                <Card
                   key={item.id}
-                  className="rounded-lg border border-zinc-200 p-4"
                 >
                   <p className="text-sm font-medium text-zinc-900">
                     {item.owner}/{item.repo}
@@ -91,7 +90,7 @@ export default async function DashboardPage() {
                   <div className="mt-2">
                     <CommitActivityChart owner={item.owner} repo={item.repo} />
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           </div>
