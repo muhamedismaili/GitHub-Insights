@@ -8,14 +8,24 @@ export default function WatchlistButton({
   owner,
   repo,
   initialItemId,
+  isLoggedIn
 }: {
   owner: string;
   repo: string;
   initialItemId: string | null;
+  isLoggedIn: boolean;
 }) {
   const [itemId, setItemId] = useState<string | null>(initialItemId);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const router = useRouter();
+
+  if (!isLoggedIn) {
+    return (
+      <span className="mt-8 ml-3 inline-block rounded-full border border-zinc-200 px-5 py-2.5 text-sm font-medium text-zinc-400">
+        Sign in to add to watchlist
+      </span>
+    );
+  }
 
   async function handleAdd() {
     setStatus("loading");

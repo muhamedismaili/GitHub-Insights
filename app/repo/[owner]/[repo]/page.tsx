@@ -2,12 +2,14 @@ import { GithubRepo } from "@/app/lib/definitions";
 import ErrorMessage from "@/app/ui/error-message";
 import BackButton from "@/app/ui/back-button";
 import WatchlistButton from "@/app/ui/watchlist-button";
+import { auth } from "@/auth";
 
 export default async function RepoDetailPage({
   params,
 }: {
   params: Promise<{ owner: string; repo: string }>;
 }) {
+  const session = await auth();
   const { owner, repo } = await params;
 
   const res = await fetch(
@@ -62,6 +64,7 @@ const existingItem = watchlistData.watchlist.find(
         owner={owner}
         repo={repoData.name}
         initialItemId={existingItem?.id ?? null}
+        isLoggedIn={!!session?.user}
       />
     </main>
   );

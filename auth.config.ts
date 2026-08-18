@@ -14,7 +14,12 @@ export const authConfig = {
         nextUrl.pathname.startsWith("/watchlist") ||
         nextUrl.pathname.startsWith("/dashboard");
 
+      if (isProtectedRoute && !isLoggedIn) {
+        return Response.redirect(new URL("/?authRequired=true", nextUrl));
+      }
+
       if (isProtectedRoute) {
+        
         return isLoggedIn;
       }
       return true;

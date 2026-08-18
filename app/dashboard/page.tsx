@@ -1,30 +1,25 @@
 import ErrorMessage from "@/app/ui/error-message";
 import LanguageChart from "@/app/ui/language-chart";
 import CommitActivityChart from "@/app/ui/commit-activity-chart";
-import Card from "../ui/card";
-import EmptyState from "../ui/empty-state";
-
-type DashboardData = {
-  totalWatched: number;
-  mostStarred: { owner: string; repo: string; stars: number } | null;
-  mostRecent: { owner: string; repo: string } | null;
-  languages: Record<string, number>;
-  watchlistItems: { id: string; owner: string; repo: string }[];
-};
+import Card from "@/app/ui/card";
+import EmptyState from "@/app/ui/empty-state";
+import { auth } from "@/auth";
+import { getDashboardData } from "@/app/lib/dashboard-data";
 
 export default async function DashboardPage() {
-  const res = await fetch("http://localhost:3000/api/dashboard", {
-    cache: "no-store",
-  });
+  const session = await auth();
 
-  let data: DashboardData | null = null;
+  if (!session?.user) {
+    return null;
+  }
+
+  let data: Awaited<ReturnType<typeof getDashboardData>> | null = null;
   let errorMessage: string | null = null;
 
-  if (res.ok) {
-    data = await res.json();
-  } else {
-    const errorData = await res.json();
-    errorMessage = errorData.error ?? "Something went wrong.";
+  try {
+    data = await getDashboardData(session.user.id);
+  } catch {
+    errorMessage = "Something went wrong loading your dashboard.";
   }
 
   return (
@@ -34,7 +29,7 @@ export default async function DashboardPage() {
       {errorMessage && <ErrorMessage message={errorMessage} />}
 
       {data && data.totalWatched === 0 && (
-        <EmptyState message="Nothing in your watchlist yet — add some repos to see stats here."/>
+        <EmptyState message="Nothing in your watchlist yet — add some repos to see stats here." />
       )}
 
       {data && data.totalWatched > 0 && (
@@ -54,9 +49,7 @@ export default async function DashboardPage() {
                   : "—"}
               </p>
               {data.mostStarred && (
-                <p className="text-xs text-zinc-500">
-                  ⭐ {data.mostStarred.stars}
-                </p>
+                <p className="text-xs text-zinc-500">⭐ {data.mostStarred.stars}</p>
               )}
             </Card>
             <Card>
@@ -75,15 +68,14 @@ export default async function DashboardPage() {
             </h2>
             <LanguageChart languages={data.languages} />
           </div>
+
           <div className="mt-8">
             <h2 className="text-lg font-semibold text-zinc-900">
               Commit Activity
             </h2>
             <div className="mt-4 flex flex-col gap-4">
               {data.watchlistItems.map((item) => (
-                <Card
-                  key={item.id}
-                >
+                <Card key={item.id}>
                   <p className="text-sm font-medium text-zinc-900">
                     {item.owner}/{item.repo}
                   </p>

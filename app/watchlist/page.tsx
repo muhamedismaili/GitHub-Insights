@@ -5,45 +5,46 @@ import RemoveItemButton from "@/app/ui/remove-item-button";
 import RemoveNoteButton from "@/app/ui/remove-note-button";
 import Card from "../ui/card";
 import EmptyState from "../ui/empty-state";
-
-type WatchlistNote = {
-  id: string;
-  content: string;
-  createdAt: string;
-};
-
-type WatchlistItem = {
-  id: string;
-  owner: string;
-  repo: string;
-  addedAt: string;
-  notes: WatchlistNote[];
-};
+import { auth } from "@/auth";
+import { prisma } from "@/app/lib/prisma";
 
 export default async function WatchlistPage({
   searchParams,
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
+  const session = await auth();
+
+  if (!session?.user) {
+    return null;
+  }
+
   const { page } = await searchParams;
   const currentPage = Number(page) || 1;
+  const perPage = 8;
 
-  const res = await fetch(
-    `http://localhost:3000/api/watchlist?page=${currentPage}`,
-    { cache: "no-store" }
-  );
-
-  let watchlist: WatchlistItem[] = [];
+  let watchlist: Awaited<ReturnType<typeof prisma.watchlistItem.findMany>> = [];
   let hasNextPage = false;
   let errorMessage: string | null = null;
 
-  if (res.ok) {
-    const data = await res.json();
-    watchlist = data.watchlist;
-    hasNextPage = data.hasNextPage;
-  } else {
-    const errorData = await res.json();
-    errorMessage = errorData.error ?? "Something went wrong.";
+  try {
+    const [items, totalCount] = await Promise.all([
+      prisma.watchlistItem.findMany({
+        where: { userId: session.user.id },
+        include: { notes: true },
+        orderBy: { addedAt: "desc" },
+        skip: (currentPage - 1) * perPage,
+        take: perPage,
+      }),
+      prisma.watchlistItem.count({
+        where: { userId: session.user.id },
+      }),
+    ]);
+
+    watchlist = items;
+    hasNextPage = currentPage * perPage < totalCount;
+  } catch {
+    errorMessage = "Something went wrong loading your watchlist.";
   }
 
   return (
@@ -58,10 +59,7 @@ export default async function WatchlistPage({
 
       <div className="mt-8 flex flex-col gap-4">
         {watchlist.map((item) => (
-          <Card
-            key={item.id}
-            className="relative"
-          >
+          <Card key={item.id} className="relative">
             <RemoveItemButton itemId={item.id} />
             <Link
               href={`/repo/${item.owner}/${item.repo}`}

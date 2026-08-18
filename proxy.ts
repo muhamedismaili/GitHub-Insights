@@ -1,6 +1,6 @@
-export { auth as default } from "./auth";
+import { auth } from "./auth";
 
-export const runtime = "nodejs";
+export default auth;
 
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|.*\\.png$).*)"],

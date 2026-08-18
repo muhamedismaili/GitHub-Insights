@@ -27,6 +27,7 @@ export default function CommitActivityChart({
 
       if (res.status === 202) {
         setPending(true);
+        setTimeout(load, 3000);
         return;
       }
 
@@ -36,6 +37,11 @@ export default function CommitActivityChart({
       }
 
       const raw: CommitWeek[] = await res.json();
+      if (!Array.isArray(raw)) {
+        setError("Couldn't load commit activity.");
+        return;
+      }
+
       setData(raw.slice(-10));
     }
 

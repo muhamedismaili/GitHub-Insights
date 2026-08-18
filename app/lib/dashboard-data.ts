@@ -1,34 +1,31 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
-import { auth } from "@/auth";
 
-export async function GET() {
-  const session = await auth();
-
-  if (!session?.user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-
+export async function getDashboardData(userId: string) {
   const watchlist = await prisma.watchlistItem.findMany({
-    where: { userId: session.user.id },
+    where: { userId },
     orderBy: { addedAt: "desc" },
   });
 
   if (watchlist.length === 0) {
-    return NextResponse.json({
+    return {
       totalWatched: 0,
       mostStarred: null,
       mostRecent: null,
       languages: {},
-      commitActivity: [],
       watchlistItems: [],
-    });
+    };
   }
 
   const repoDetails = await Promise.all(
     watchlist.map(async (item) => {
       const res = await fetch(
-        `http://localhost:3000/api/github/repo?owner=${item.owner}&repo=${item.repo}`
+        `https://api.github.com/repos/${item.owner}/${item.repo}`,
+        {
+          headers: {
+            Accept: "application/vnd.github+json",
+            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+          },
+        }
       );
       return res.ok ? res.json() : null;
     })
@@ -36,14 +33,21 @@ export async function GET() {
 
   const validRepos = repoDetails.filter((r) => r !== null);
 
-  const mostStarred = validRepos.reduce((max, r) =>
-    r.stargazers_count > (max?.stargazers_count ?? -1) ? r : max
-  , null);
+  const mostStarred = validRepos.reduce(
+    (max, r) => (r.stargazers_count > (max?.stargazers_count ?? -1) ? r : max),
+    null
+  );
 
   const languageResults = await Promise.all(
     watchlist.map(async (item) => {
       const res = await fetch(
-        `http://localhost:3000/api/github/languages?owner=${item.owner}&repo=${item.repo}`
+        `https://api.github.com/repos/${item.owner}/${item.repo}/languages`,
+        {
+          headers: {
+            Accept: "application/vnd.github+json",
+            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+          },
+        }
       );
       return res.ok ? res.json() : {};
     })
@@ -56,7 +60,7 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({
+  return {
     totalWatched: watchlist.length,
     mostStarred: mostStarred
       ? { owner: mostStarred.owner.login, repo: mostStarred.name, stars: mostStarred.stargazers_count }
@@ -64,5 +68,5 @@ export async function GET() {
     mostRecent: { owner: watchlist[0].owner, repo: watchlist[0].repo },
     languages,
     watchlistItems: watchlist,
-  });
+  };
 }
