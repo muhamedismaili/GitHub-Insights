@@ -4,7 +4,7 @@ import ErrorMessage from "@/app/ui/error-message";
 import BackButton from "@/app/ui/back-button";
 import EmptyState from "@/app/ui/empty-state";
 import RepoListItem from "@/app/ui/repo-list-item";
-import { getBaseUrl } from "@/app/lib/base-url";
+import { getUserRepos } from "@/app/lib/github-api";
 
 export default async function UserReposPage({
   params,
@@ -17,21 +17,16 @@ export default async function UserReposPage({
   const { page } = await searchParams;
   const currentPage = Number(page) || 1;
 
-  const res = await fetch(
-  `${getBaseUrl()}/api/github/repos?username=${encodeURIComponent(username)}&page=${currentPage}`,
-);
-
   let repos: GithubRepo[] = [];
   let hasNextPage = false;
   let errorMessage: string | null = null;
 
-  if (res.ok) {
-    const data = await res.json();
-    repos = data.repos;
-    hasNextPage = data.hasNextPage;
-  } else {
-    const errorData = await res.json();
-    errorMessage = errorData.error ?? "Something went wrong.";
+  try {
+    const result = await getUserRepos(username, currentPage);
+    repos = result.repos;
+    hasNextPage = result.hasNextPage;
+  } catch (err) {
+    errorMessage = err instanceof Error ? err.message : "Something went wrong.";
   }
 
   return (

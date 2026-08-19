@@ -3,7 +3,8 @@ import ErrorMessage from "@/app/ui/error-message";
 import BackButton from "@/app/ui/back-button";
 import WatchlistButton from "@/app/ui/watchlist-button";
 import { auth } from "@/auth";
-import { getBaseUrl } from "@/app/lib/base-url";
+import { getRepo } from "@/app/lib/github-api";
+import { prisma } from "@/app/lib/prisma";
 
 export default async function RepoDetailPage({
   params,
@@ -13,32 +14,31 @@ export default async function RepoDetailPage({
   const session = await auth();
   const { owner, repo } = await params;
 
-  const res = await fetch(
-    `${getBaseUrl()}/api/github/repo?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`,
-  );
-
-  if (!res.ok) {
-    const errorData = await res.json();
+  let repoData: GithubRepo;
+  try {
+    repoData = await getRepo(owner, repo);
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Something went wrong.";
     return (
       <main className="mx-auto max-w-5xl px-6 py-12">
         <BackButton />
-        <ErrorMessage message={errorData.error ?? "Something went wrong."} />
+        <ErrorMessage message={message} />
       </main>
     );
   }
 
-  const repoData: GithubRepo = await res.json();
-
-  const watchlistRes = await fetch(`${getBaseUrl()}/api/watchlist`, {
-    cache: "no-store",
-  });
-  const watchlistData = watchlistRes.ok
-    ? await watchlistRes.json()
-    : { watchlist: [] };
-  const existingItem = watchlistData.watchlist.find(
-    (item: { id: string; owner: string; repo: string }) =>
-      item.owner === owner && item.repo === repoData.name,
-  );
+  let existingItemId: string | null = null;
+  if (session?.user) {
+    const existingItem = await prisma.watchlistItem.findFirst({
+      where: {
+        userId: session.user.id!,
+        owner,
+        repo: repoData.name,
+      },
+    });
+    existingItemId = existingItem?.id ?? null;
+  }
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
@@ -66,7 +66,7 @@ export default async function RepoDetailPage({
       <WatchlistButton
         owner={owner}
         repo={repoData.name}
-        initialItemId={existingItem?.id ?? null}
+        initialItemId={existingItemId}
         isLoggedIn={!!session?.user}
       />
     </main>
