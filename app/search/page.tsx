@@ -2,6 +2,7 @@ import SearchBox from "@/app/ui/search-box";
 import { GithubUserSearchResult } from "@/app/lib/definitions";
 import Link from "next/link";
 import ErrorMessage from "@/app/ui/error-message";
+import { getBaseUrl } from "../lib/base-url";
 
 export default async function SearchPage({
   searchParams,
@@ -15,7 +16,7 @@ export default async function SearchPage({
 
   if (q) {
     const res = await fetch(
-      `http://localhost:3000/api/github/search?q=${encodeURIComponent(q)}`,
+      `${getBaseUrl()}/api/github/search?q=${encodeURIComponent(q)}`,
     );
     if (res.ok) {
       results = await res.json();

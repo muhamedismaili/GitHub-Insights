@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
 import { auth } from "@/auth";
+import { getBaseUrl } from "@/app/lib/base-url";
 
 export async function GET() {
   const session = await auth();
@@ -28,25 +29,26 @@ export async function GET() {
   const repoDetails = await Promise.all(
     watchlist.map(async (item) => {
       const res = await fetch(
-        `http://localhost:3000/api/github/repo?owner=${item.owner}&repo=${item.repo}`
+        `${getBaseUrl()}/api/github/languages?owner=${item.owner}&repo=${item.repo}`,
       );
       return res.ok ? res.json() : null;
-    })
+    }),
   );
 
   const validRepos = repoDetails.filter((r) => r !== null);
 
-  const mostStarred = validRepos.reduce((max, r) =>
-    r.stargazers_count > (max?.stargazers_count ?? -1) ? r : max
-  , null);
+  const mostStarred = validRepos.reduce(
+    (max, r) => (r.stargazers_count > (max?.stargazers_count ?? -1) ? r : max),
+    null,
+  );
 
   const languageResults = await Promise.all(
     watchlist.map(async (item) => {
       const res = await fetch(
-        `http://localhost:3000/api/github/languages?owner=${item.owner}&repo=${item.repo}`
+        `${getBaseUrl()}/api/github/languages?owner=${item.owner}&repo=${item.repo}`,
       );
       return res.ok ? res.json() : {};
-    })
+    }),
   );
 
   const languages: Record<string, number> = {};
@@ -59,7 +61,11 @@ export async function GET() {
   return NextResponse.json({
     totalWatched: watchlist.length,
     mostStarred: mostStarred
-      ? { owner: mostStarred.owner.login, repo: mostStarred.name, stars: mostStarred.stargazers_count }
+      ? {
+          owner: mostStarred.owner.login,
+          repo: mostStarred.name,
+          stars: mostStarred.stargazers_count,
+        }
       : null,
     mostRecent: { owner: watchlist[0].owner, repo: watchlist[0].repo },
     languages,

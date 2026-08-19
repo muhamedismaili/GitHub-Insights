@@ -4,6 +4,7 @@ import ErrorMessage from "@/app/ui/error-message";
 import BackButton from "@/app/ui/back-button";
 import EmptyState from "@/app/ui/empty-state";
 import RepoListItem from "@/app/ui/repo-list-item";
+import { getBaseUrl } from "@/app/lib/base-url";
 
 export default async function UserReposPage({
   params,
@@ -17,8 +18,8 @@ export default async function UserReposPage({
   const currentPage = Number(page) || 1;
 
   const res = await fetch(
-    `http://localhost:3000/api/github/repos?username=${encodeURIComponent(username)}&page=${currentPage}`,
-  );
+  `${getBaseUrl()}/api/github/repos?username=${encodeURIComponent(username)}&page=${currentPage}`,
+);
 
   let repos: GithubRepo[] = [];
   let hasNextPage = false;

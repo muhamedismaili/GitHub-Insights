@@ -3,6 +3,7 @@ import ErrorMessage from "@/app/ui/error-message";
 import BackButton from "@/app/ui/back-button";
 import WatchlistButton from "@/app/ui/watchlist-button";
 import { auth } from "@/auth";
+import { getBaseUrl } from "@/app/lib/base-url";
 
 export default async function RepoDetailPage({
   params,
@@ -13,7 +14,7 @@ export default async function RepoDetailPage({
   const { owner, repo } = await params;
 
   const res = await fetch(
-    `http://localhost:3000/api/github/repo?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`
+    `${getBaseUrl()}/api/github/repo?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`,
   );
 
   if (!res.ok) {
@@ -28,14 +29,16 @@ export default async function RepoDetailPage({
 
   const repoData: GithubRepo = await res.json();
 
-  const watchlistRes = await fetch("http://localhost:3000/api/watchlist", {
-  cache: "no-store",
-});
-const watchlistData = watchlistRes.ok ? await watchlistRes.json() : { watchlist: [] };
-const existingItem = watchlistData.watchlist.find(
-  (item: { id: string; owner: string; repo: string }) =>
-    item.owner === owner && item.repo === repoData.name
-);
+  const watchlistRes = await fetch(`${getBaseUrl()}/api/watchlist`, {
+    cache: "no-store",
+  });
+  const watchlistData = watchlistRes.ok
+    ? await watchlistRes.json()
+    : { watchlist: [] };
+  const existingItem = watchlistData.watchlist.find(
+    (item: { id: string; owner: string; repo: string }) =>
+      item.owner === owner && item.repo === repoData.name,
+  );
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
