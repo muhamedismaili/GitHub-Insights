@@ -2,7 +2,7 @@ import SearchBox from "@/app/ui/search-box";
 import { GithubUserSearchResult } from "@/app/lib/definitions";
 import Link from "next/link";
 import ErrorMessage from "@/app/ui/error-message";
-import { getBaseUrl } from "../lib/base-url";
+import { searchGithubUsers } from "@/app/lib/github-search";
 
 export default async function SearchPage({
   searchParams,
@@ -15,20 +15,10 @@ export default async function SearchPage({
   let errorMessage: string | null = null;
 
   if (q) {
-    const res = await fetch(
-      `${getBaseUrl()}/api/github/search?q=${encodeURIComponent(q)}`,
-    );
-    if (res.ok) {
-      results = await res.json();
-    } else {
-      let message = `Request failed with status ${res.status}`;
-      try {
-        const errorData = await res.json();
-        message = errorData.error ?? message;
-      } catch {
-        // response wasn't JSON — keep the status-based message
-      }
-      errorMessage = message;
+    try {
+      results = await searchGithubUsers(q);
+    } catch (err) {
+      errorMessage = err instanceof Error ? err.message : "Something went wrong.";
     }
   }
 
