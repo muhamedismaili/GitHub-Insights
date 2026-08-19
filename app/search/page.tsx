@@ -21,8 +21,14 @@ export default async function SearchPage({
     if (res.ok) {
       results = await res.json();
     } else {
-      const errorData = await res.json();
-      errorMessage = errorData.error ?? "Something went wrong.";
+      let message = `Request failed with status ${res.status}`;
+      try {
+        const errorData = await res.json();
+        message = errorData.error ?? message;
+      } catch {
+        // response wasn't JSON — keep the status-based message
+      }
+      errorMessage = message;
     }
   }
 
