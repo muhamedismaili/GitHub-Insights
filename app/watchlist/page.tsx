@@ -30,14 +30,14 @@ export default async function WatchlistPage({
   try {
     const [items, totalCount] = await Promise.all([
       prisma.watchlistItem.findMany({
-        where: { userId: session.user.id },
+        where: { userId: session.user.id! },
         include: { notes: true },
         orderBy: { addedAt: "desc" },
         skip: (currentPage - 1) * perPage,
         take: perPage,
       }),
       prisma.watchlistItem.count({
-        where: { userId: session.user.id },
+        where: { userId: session.user.id! },
       }),
     ]);
 

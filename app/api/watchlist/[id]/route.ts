@@ -18,7 +18,7 @@ export async function DELETE(
     where: { id },
   });
 
-  if (!item || item.userId !== session.user.id) {
+  if (!item || item.userId !== session.user.id!) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

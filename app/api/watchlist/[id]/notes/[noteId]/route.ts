@@ -22,7 +22,7 @@ export async function DELETE(
 
   const { id, noteId } = await params;
 
-  const owns = await verifyOwnership(id, session.user.id);
+  const owns = await verifyOwnership(id, session.user.id!);
   if (!owns) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

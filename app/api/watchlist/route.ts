@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   }
 
   const existing = await prisma.watchlistItem.findFirst({
-    where: { owner, repo, userId: session.user.id},
+    where: { owner, repo, userId: session.user.id!},
   });
 
   if (existing) {
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   }
 
   const watchlistItem = await prisma.watchlistItem.create({
-    data: { owner, repo, userId: session.user.id },
+    data: { owner, repo, userId: session.user.id! },
   });
 
   return NextResponse.json(watchlistItem, { status: 201 });
@@ -48,14 +48,14 @@ export async function GET(request: NextRequest) {
 
   const [watchlist, totalCount] = await Promise.all([
     prisma.watchlistItem.findMany({
-      where: { userId: session.user.id },
+      where: { userId: session.user.id! },
       include: { notes: true },
       orderBy: { addedAt: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
     }),
     prisma.watchlistItem.count({
-      where: { userId: session.user.id },
+      where: { userId: session.user.id! },
     }),
   ]);
 
