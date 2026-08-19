@@ -7,6 +7,7 @@ import Card from "../ui/card";
 import EmptyState from "../ui/empty-state";
 import { auth } from "@/auth";
 import { prisma } from "@/app/lib/prisma";
+import { Prisma } from "../generated/prisma/client";
 
 export default async function WatchlistPage({
   searchParams,
@@ -19,11 +20,15 @@ export default async function WatchlistPage({
     return null;
   }
 
+  type WatchlistItemWithNotes = Prisma.WatchlistItemGetPayload<{
+    include: { notes: true };
+  }>;
+
   const { page } = await searchParams;
   const currentPage = Number(page) || 1;
   const perPage = 8;
 
-  let watchlist: Awaited<ReturnType<typeof prisma.watchlistItem.findMany>> = [];
+  let watchlist: WatchlistItemWithNotes[] = [];
   let hasNextPage = false;
   let errorMessage: string | null = null;
 

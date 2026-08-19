@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   let errorMessage: string | null = null;
 
   try {
-    data = await getDashboardData(session.user.id);
+    data = await getDashboardData(session.user.id!);
   } catch {
     errorMessage = "Something went wrong loading your dashboard.";
   }
